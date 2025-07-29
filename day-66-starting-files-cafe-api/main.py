@@ -84,7 +84,7 @@ def all_cafes():
 
 @app.route("/search")
 def get_cafe_at_location():
-    query_location = request.args.get("loc")
+    query_location = request.args.get("loc").capitalize()
     result = db.session.execute(db.select(Cafe).where(Cafe.location==query_location))
     all_cafes = result.scalars().all()
     if all_cafes:
@@ -102,15 +102,42 @@ def get_cafe_at_location():
                 "can_take_calls": cafe.can_take_calls,
                 "coffee_price": cafe.coffee_price}
             )
-        return jsonify(cafes= cafe_list_location)
+        return jsonify(cafes = cafe_list_location)
     else:
         return jsonify(error={"Not Found": "Sorry, we don't have a cafe at that location."}), 404
 
 # HTTP POST - Create Record
-
+@app.route("/add", methods=['POST'])
+def post_new_cafe():
+    if request.method == "POST":
+        new_cafe = Cafe(
+            name=request.form.get("name"),
+            map_url=request.form.get("map_url"),
+            img_url=request.form.get("img_url"),
+            location=request.form.get("loc"),
+            has_sockets=bool(request.form.get("sockets")),
+            has_toilet=bool(request.form.get("toilet")),
+            has_wifi=bool(request.form.get("wifi")),
+            can_take_calls=bool(request.form.get("calls")),
+            seats=request.form.get("seats"),
+            coffee_price=request.form.get("coffee_price"),
+        )
+        db.session.add(new_cafe)
+        db.session.commit()
+    return jsonify(response={"success": "Successfully added the new cafe."})
 # HTTP PUT/PATCH - Update Record
+@app.route('/update-price/<int:cafe_id>', methods=['GET', 'PATCH'])
+def change_price(cafe_id):
+    try:
+        cafe = db.session.get(Cafe, cafe_id)
+        if request.method == "PATCH":
+            cafe.coffee_price = request.form.get("new_price")
+            db.session.commit()
+        return jsonify({"success": "Successfully updated the price"})
+    except AttributeError:
+        return jsonify(error={"Not Found": "Sorry a cafe with that id was not found in the database"}), 404
 
-# HTTP DELETE - Delete Record
+# HTTP DELETE -  Delete Record
 
 
 if __name__ == '__main__':
