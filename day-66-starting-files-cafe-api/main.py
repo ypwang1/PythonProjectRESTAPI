@@ -2,19 +2,7 @@ from flask import Flask, jsonify, render_template, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy import Integer, String, Boolean
-
-'''
-Install the required packages first: 
-Open the Terminal in PyCharm (bottom left). 
-
-On Windows type:
-python -m pip install -r requirements.txt
-
-On MacOS type:
-pip3 install -r requirements.txt
-
-This will install the packages from requirements.txt for this project.
-'''
+import random
 
 app = Flask(__name__)
 
@@ -52,7 +40,48 @@ def home():
 
 
 # HTTP GET - Read Record
+@app.route("/random")
+def random_cafe():
+    result = db.session.execute(db.select(Cafe))
+    all_cafes = result.scalars().all()
+    cafe = random.choice(all_cafes)
+    print(all_cafes)
+    return jsonify(cafe={
+        "id": cafe.id,
+        "name": cafe.name,
+        "map_url": cafe.map_url,
+        "img_url": cafe.img_url,
+        "location": cafe.location,
+        "seats": cafe.seats,
+        "has_toilet": cafe.has_toilet,
+        "has_wifi": cafe.has_wifi,
+        "has_sockets": cafe.has_sockets,
+        "can_take_calls": cafe.can_take_calls,
+        "coffee_price": cafe.coffee_price,
+    })
 
+@app.route("/all")
+def all_cafes():
+    result = db.session.execute(db.select(Cafe))
+    cafes = result.scalars().all()
+    cafe_list = []
+    for each_cafe in cafes:
+        cafe_list.append({
+            "id": each_cafe.id,
+            "name": each_cafe.name,
+            "map_url": each_cafe.map_url,
+            "img_url": each_cafe.img_url,
+            "location": each_cafe.location,
+            "seats": each_cafe.seats,
+            "has_toilet": each_cafe.has_toilet,
+            "has_wifi": each_cafe.has_wifi,
+            "has_sockets": each_cafe.has_sockets,
+            "can_take_calls": each_cafe.can_take_calls,
+            "coffee_price": each_cafe.coffee_price,
+        })
+    return jsonify(cafes=cafe_list)
+
+@app.route()
 # HTTP POST - Create Record
 
 # HTTP PUT/PATCH - Update Record
